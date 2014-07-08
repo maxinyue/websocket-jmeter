@@ -1,0 +1,59 @@
+allprojects {
+    group = 'cn.maxinyue'
+    version = '1.0'
+    repositories {
+        maven { url 'http://132.147.68.178:8081/nexus/content/groups/public/' };
+    }
+
+    project.ext {
+        logbackVersion = '1.0.7'
+        slf4jVersion = '1.7.2'
+        junitVersion = '4.10'
+        mockitoVersion = '1.9.5'
+        camelVersion = '2.12.2'
+        activeMQVersion = '5.9.0'
+        guavaVersion = '15.0'
+        tyrusVersion = '1.4'
+        jmeterVersion = '2.11'
+        jettyVersion = '8.1.12.v20130726'
+    }
+
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: "maven-publish"
+    configurations {
+        all*.exclude group: "com.fifesoft"
+        hehe.extendsFrom(runtime)
+        hehe.exclude group: "org.apache.jmeter"
+    }
+    sourceCompatibility = '1.7'
+    dependencies {
+        compile "org.slf4j:slf4j-api:$slf4jVersion"
+        compile "org.glassfish.tyrus:tyrus-container-grizzly-server:$tyrusVersion"
+        compile "org.glassfish.tyrus:tyrus-container-grizzly-client:$tyrusVersion"
+        compile "org.glassfish.tyrus:tyrus-core:$tyrusVersion"
+        compile "org.apache.jmeter:ApacheJMeter_junit:$jmeterVersion"
+        compile "org.apache.jmeter:ApacheJMeter:$jmeterVersion"
+        compile "org.apache.jmeter:ApacheJMeter_components:$jmeterVersion"
+        compile "org.apache.jmeter:ApacheJMeter_config:$jmeterVersion"
+        compile "org.apache.jmeter:ApacheJMeter_java:$jmeterVersion"
+        compile "org.apache.jmeter:ApacheJMeter_http:$jmeterVersion"
+        compile "org.apache.jmeter:ApacheJMeter_functions:$jmeterVersion"
+        compile "org.glassfish.tyrus:tyrus-server:$tyrusVersion"
+        compile "org.glassfish.tyrus:tyrus-client:$tyrusVersion"
+        compile "org.eclipse.jetty:jetty-websocket:$jettyVersion"
+        testCompile "junit:junit:$junitVersion"
+        testCompile "org.mockito:mockito-all:$mockitoVersion"
+    }
+}
+
+idea.project.ipr {
+    withXml { provider ->
+        provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+    }
+}
+
+task copyJar(type: Copy) {
+    from configurations.hehe
+    into "$buildDir/libs"
+}
