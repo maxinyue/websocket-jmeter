@@ -1,3 +1,6 @@
 /.gradle
 /build
 /out
+/websocket-jmeter.iws
+/websocket-jmeter.iml
+/websocket-jmeter.ipr
