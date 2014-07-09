@@ -100,11 +100,9 @@ public class WebSocketSamplerGui extends AbstractSamplerGui {
         element.setProperty(WebSocketSampler.PORT, port.getText());
         element.setProperty(WebSocketSampler.PROTOCOL, protocol.getText());
         element.setProperty(WebSocketSampler.CONTENT_ENCODING, contentEncoding.getText());
-
         Arguments args = (Arguments) argsPanel.createTestElement();
         HTTPArgument.convertArgumentsToHTTP(args);
         element.setProperty(new TestElementProperty(WebSocketSampler.ARGUMENTS, args));
-
         element.setProperty(WebSocketSampler.SEND_MESSAGE, sendMessage.getText());
         element.setProperty(WebSocketSampler.RECV_MESSAGE, recvMessage.getText());
     }
@@ -123,14 +121,11 @@ public class WebSocketSamplerGui extends AbstractSamplerGui {
 
     private JPanel getPortPanel() {
         port = new JTextField(4);
-
         JLabel label = new JLabel(JMeterUtils.getResString("web_server_port")); // $NON-NLS-1$
         label.setLabelFor(port);
-
         JPanel panel = new JPanel(new BorderLayout(5, 0));
         panel.add(label, BorderLayout.WEST);
         panel.add(port, BorderLayout.CENTER);
-
         return panel;
     }
 

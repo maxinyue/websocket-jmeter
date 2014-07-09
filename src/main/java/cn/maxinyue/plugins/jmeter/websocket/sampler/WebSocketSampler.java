@@ -56,11 +56,9 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     private static final int UNSPECIFIED_PORT = 0;
     private static final String UNSPECIFIED_PORT_AS_STRING = "0"; // $NON-NLS-1$
     private static final int URL_UNSPECIFIED_PORT = -1;
-    private static final ConcurrentHashSet<Session> samplerSessions
-            = new ConcurrentHashSet<>();
     private boolean initialized = false;
     private String responseMessage;
-    private static ClientManager client= ClientManager.createClient();
+    private static ClientManager client = ClientManager.createClient();
     public static final String DOMAIN = "WebSocketSampler.domain";
     public static final String PORT = "WebSocketSampler.port";
     public static final String PATH = "WebSocketSampler.path";
@@ -71,6 +69,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     public static final String RECV_MESSAGE = "WebSocketSampler.recvMessage";
     public static final String RECV_TIMEOUT = "WebSocketSampler.recvTimeout";
     private Session session;
+
     public WebSocketSampler() {
         setArguments(new Arguments());
     }
@@ -79,7 +78,6 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
         URI uri = getUri();
         final WebSocketSampler sampler = this;
         session = client.asyncConnectToServer(new DefaultClientEndpoint(sampler), uri).get();
-        samplerSessions.add(session);
         initialized = true;
     }
 
@@ -112,7 +110,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
             }
             if (responseMessage == null) {
                 res.setResponseCode("204");
-                responseMessage="No content (probably timeout).";
+                responseMessage = "No content (probably timeout).";
                 throw new TimeoutException("No content (probably timeout).");
             }
             res.setResponseCodeOK();
@@ -194,6 +192,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
         setProperty(new IntegerProperty(PORT, value));
     }
 
+
     public static int getDefaultPort(String protocol, int port) {
         if (port == URL_UNSPECIFIED_PORT) {
             return
@@ -210,12 +209,13 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
      * @return port number or UNSPECIFIED_PORT (== 0)
      */
     public int getPortIfSpecified() {
-        String port_s = getPropertyAsString(PORT, UNSPECIFIED_PORT_AS_STRING);
-        try {
-            return Integer.parseInt(port_s.trim());
-        } catch (NumberFormatException e) {
-            return UNSPECIFIED_PORT;
-        }
+//        String port_s = getPropertyAsString(PORT, UNSPECIFIED_PORT_AS_STRING);
+//        try {
+//            return Integer.parseInt(port_s.trim());
+//        } catch (NumberFormatException e) {
+//            return UNSPECIFIED_PORT;
+//        }
+        return getPropertyAsInt(PORT);
     }
 
     /**

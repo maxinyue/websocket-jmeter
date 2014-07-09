@@ -47,8 +47,8 @@ public class TestForHerenMessage {
         testPlan.setUserDefinedVariables(new Arguments());
 
         threadGroup = new ThreadGroup();
-        threadGroup.setNumThreads(100);
-        threadGroup.setRampUp(20);
+        threadGroup.setNumThreads(1);
+        threadGroup.setRampUp(0);
         threadGroup.setDelay(0);
         threadGroup.setDuration(0);
         threadGroup.setProperty(new StringProperty(ThreadGroup.ON_SAMPLE_ERROR, "continue"));
@@ -57,7 +57,7 @@ public class TestForHerenMessage {
         threadGroup.setProperty(new BooleanProperty(TestElement.ENABLED, true));
 
         LoopController controller = new LoopController();
-        controller.setLoops(10);
+        controller.setLoops(1);
         controller.setContinueForever(false);
         controller.setProperty(new BooleanProperty(TestElement.ENABLED, true));
         threadGroup.setProperty(new TestElementProperty(ThreadGroup.MAIN_CONTROLLER, controller));
@@ -70,14 +70,14 @@ public class TestForHerenMessage {
         sampler.setDomain("localhost");
         sampler.setPort(9999);
         sampler.setPath("heren-message/message", "UTF-8");
-        sampler.setSendMessage("{\"content\":\"患者住院流程?initParam=221717\",\"messageType\":\"BUSINESS\"}");
-        sampler.setRecvTimeout(20000L);
-
+        sampler.setSendMessage("{\"sender\":{\"staffDict\":{\"empId\":\"1419\"},\"applications\":{\"appId\":\"131012160730\"}},\"content\":\"患者住院流程?initParam=221717\",\"messageType\":\"BUSINESS\"}");
+        sampler.setRecvTimeout(2000L);
+        Summariser summariser = new Summariser();
         HashTree tpConfig = config.add(testPlan);
         HashTree tgConfig = tpConfig.add(threadGroup);
 
         HashTree samplerConfig = tgConfig.add(sampler);
-
+//        samplerConfig.add(summariser);
         engine.configure(config);
         engine.runTest();
     }

@@ -29,8 +29,8 @@ public class DefaultClientEndpoint {
     }
 
     @OnOpen
-    public void onOpen() {
-//        logger.debug("Connect " + JMeterContextService.getContext().getThread().getThreadName());
+    public void onOpen(Session session) {
+        session.getAsyncRemote().sendText("{\"sender\":{\"staffDict\":{\"empId\":\"1227\"},\"applications\":{\"appId\":\"140304112743\"}},\"content\":\"LOGIN\",\"messageType\":\"SYSTEM\"}");
     }
 
     @OnClose
