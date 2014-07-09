@@ -30,11 +30,11 @@ public class DefaultClientEndpoint {
 
     @OnOpen
     public void onOpen() {
-        logger.debug("Connect " + JMeterContextService.getContext().getThread().getThreadName());
+//        logger.debug("Connect " + JMeterContextService.getContext().getThread().getThreadName());
     }
 
     @OnClose
     public void onClose() {
-        logger.debug("Disconnect " + JMeterContextService.getContext().getThread().getThreadName());
+//        logger.debug("Disconnect " + JMeterContextService.getContext().getThread().getThreadName());
     }
 }
