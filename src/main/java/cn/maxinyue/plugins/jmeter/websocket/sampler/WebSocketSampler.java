@@ -14,26 +14,24 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.property.*;
-import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.log.Logger;
-import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
 import org.glassfish.tyrus.client.ClientManager;
 
+import javax.websocket.DeploymentException;
 import javax.websocket.Session;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Future;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 
 /**
  * The sampler for WebSocket.
@@ -68,17 +66,28 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     public static final String SEND_MESSAGE = "WebSocketSampler.sendMessage";
     public static final String RECV_MESSAGE = "WebSocketSampler.recvMessage";
     public static final String RECV_TIMEOUT = "WebSocketSampler.recvTimeout";
+    private static final ConcurrentHashMap<Session, DefaultClientEndpoint> samplerSessions
+            = new ConcurrentHashMap<>();
     private Session session;
 
     public WebSocketSampler() {
         setArguments(new Arguments());
     }
 
-    public void initialize() throws Exception {
-        URI uri = getUri();
-        final WebSocketSampler sampler = this;
-        session = client.asyncConnectToServer(new DefaultClientEndpoint(sampler), uri).get();
-        initialized = true;
+    public void initialize(){
+        URI uri = null;
+        try {
+            uri = getUri();
+            final WebSocketSampler sampler = this;
+            DefaultClientEndpoint defaultClientEndpoint = new DefaultClientEndpoint(sampler);
+            session = client.connectToServer(defaultClientEndpoint, uri);
+            log.info("add session to map"+session.getId());
+            samplerSessions.put(session, defaultClientEndpoint);
+            initialized = true;
+        } catch (URISyntaxException  | DeploymentException | IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -101,13 +110,11 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
         try {
             if (session.isOpen()) {
                 res.setDataEncoding(getContentEncoding());
-                session.getAsyncRemote().sendText(message);
+                session.getBasicRemote().sendText(message);
             } else {
                 initialize();
             }
-            synchronized (this) {
-                wait(getRecvTimeout());
-            }
+            samplerSessions.get(session).getCountDownLatch().await(getRecvTimeout(), TimeUnit.MILLISECONDS);
             if (responseMessage == null) {
                 res.setResponseCode("204");
                 responseMessage = "No content (probably timeout).";
@@ -469,13 +476,15 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
 
     @Override
     public void testEnded(String host) {
-//        try {
-//            for (Session session : samplerSessions) {
-//                session.close();
-//            }
-//        } catch (Exception e) {
-//            log.error("sampler error when close.", e);
-//        }
+        try {
+            for (Session session : samplerSessions.keySet()) {
+                session.getAsyncRemote().sendText("{\"sender\":{\"staffDict\":{\"empId\":\"1227\"},\"applications\":{\"appId\":\"140304112743\"}},\"content\":\"LOGOUT\",\"messageType\":\"SYSTEM\"}");
+                session.close();
+                log.debug("session closed");
+            }
+        } catch (Exception e) {
+            log.error("sampler error when close.", e);
+        }
     }
 
     /**
