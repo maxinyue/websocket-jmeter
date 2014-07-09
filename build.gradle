@@ -13,7 +13,7 @@ allprojects {
         camelVersion = '2.12.2'
         activeMQVersion = '5.9.0'
         guavaVersion = '15.0'
-        tyrusVersion = '1.4'
+        tyrusVersion = '1.7'
         jmeterVersion = '2.11'
         jettyVersion = '8.1.12.v20130726'
     }
@@ -29,7 +29,7 @@ allprojects {
     sourceCompatibility = '1.7'
     dependencies {
         compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "org.glassfish.tyrus:tyrus-container-grizzly-server:$tyrusVersion"
+//        compile "org.glassfish.tyrus:tyrus-container-grizzly-server:$tyrusVersion"
         compile "org.glassfish.tyrus:tyrus-container-grizzly-client:$tyrusVersion"
         compile "org.glassfish.tyrus:tyrus-core:$tyrusVersion"
         compile "org.apache.jmeter:ApacheJMeter_junit:$jmeterVersion"

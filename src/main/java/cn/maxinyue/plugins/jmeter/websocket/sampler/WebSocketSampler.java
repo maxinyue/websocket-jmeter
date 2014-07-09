@@ -78,7 +78,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     public void initialize() throws Exception {
         URI uri = getUri();
         final WebSocketSampler sampler = this;
-        session = client.connectToServer(new DefaultClientEndpoint(sampler), uri);
+        session = client.asyncConnectToServer(new DefaultClientEndpoint(sampler), uri).get();
         samplerSessions.add(session);
         initialized = true;
     }
@@ -112,6 +112,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
             }
             if (responseMessage == null) {
                 res.setResponseCode("204");
+                responseMessage="No content (probably timeout).";
                 throw new TimeoutException("No content (probably timeout).");
             }
             res.setResponseCodeOK();

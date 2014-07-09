@@ -1,4 +1,4 @@
-package net.unit8.jmeter.protocol.websocket.sampler;
+package cn.maxinyue.plugins.jmeter.websocket.sampler;
 
 import cn.maxinyue.plugins.jmeter.websocket.sampler.WebSocketSampler;
 import org.apache.jmeter.config.Arguments;
