@@ -17,6 +17,7 @@ import org.apache.jmeter.testelement.property.*;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JOrphanUtils;
 import org.apache.log.Logger;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.glassfish.tyrus.client.ClientManager;
 
 import javax.websocket.DeploymentException;
@@ -28,10 +29,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * The sampler for WebSocket.
@@ -66,28 +64,31 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     public static final String SEND_MESSAGE = "WebSocketSampler.sendMessage";
     public static final String RECV_MESSAGE = "WebSocketSampler.recvMessage";
     public static final String RECV_TIMEOUT = "WebSocketSampler.recvTimeout";
-    private static final ConcurrentHashMap<Session, DefaultClientEndpoint> samplerSessions
-            = new ConcurrentHashMap<>();
-    private Session session;
+    private static final ConcurrentHashSet<Session> sessions
+            = new ConcurrentHashSet<>();
+    private DefaultClientEndpoint defaultClientEndpoint;
 
     public WebSocketSampler() {
         setArguments(new Arguments());
     }
 
-    public void initialize(){
+    public Session initialize() {
         URI uri = null;
+        Session session = null;
         try {
             uri = getUri();
             final WebSocketSampler sampler = this;
-            DefaultClientEndpoint defaultClientEndpoint = new DefaultClientEndpoint(sampler);
-            session = client.connectToServer(defaultClientEndpoint, uri);
-            log.info("add session to map"+session.getId());
-            samplerSessions.put(session, defaultClientEndpoint);
-            initialized = true;
-        } catch (URISyntaxException  | DeploymentException | IOException e) {
+            if (defaultClientEndpoint == null) {
+                defaultClientEndpoint = new DefaultClientEndpoint(sampler);
+            }
+            session = client.asyncConnectToServer(defaultClientEndpoint, uri).get();
+            log.debug("session:"+session.getId());
+            sessions.add(session);
+            return session;
+        } catch (URISyntaxException | DeploymentException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
+            return session;
         }
-
     }
 
     @Override
@@ -95,26 +96,22 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
         SampleResult res = new SampleResult();
         res.setSampleLabel(getName());
         boolean isOK = false;
-        if (!initialized) {
-            try {
-                initialize();
-            } catch (Exception e) {
-                res.setResponseMessage(e.getMessage());
-                res.setSuccessful(false);
-                return res;
-            }
-        }
+        Session session = initialize();
         String message = getPropertyAsString(SEND_MESSAGE, "default message");
         res.setSamplerData(message);
         res.sampleStart();
         try {
-            if (session.isOpen()) {
+            if (session != null && session.isOpen()) {
                 res.setDataEncoding(getContentEncoding());
-                session.getBasicRemote().sendText(message);
+                session.getAsyncRemote().sendText(message);
             } else {
-                initialize();
+                log.error("session is null!");
+                res.setResponseMessage("session is null!");
             }
-            samplerSessions.get(session).getCountDownLatch().await(getRecvTimeout(), TimeUnit.MILLISECONDS);
+            synchronized (this) {
+                wait(getRecvTimeout());
+            }
+//            new CountDownLatch(1).await(getRecvTimeout(), TimeUnit.MILLISECONDS);
             if (responseMessage == null) {
                 res.setResponseCode("204");
                 responseMessage = "No content (probably timeout).";
@@ -477,8 +474,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     @Override
     public void testEnded(String host) {
         try {
-            for (Session session : samplerSessions.keySet()) {
-                session.getAsyncRemote().sendText("{\"sender\":{\"staffDict\":{\"empId\":\"1227\"},\"applications\":{\"appId\":\"140304112743\"}},\"content\":\"LOGOUT\",\"messageType\":\"SYSTEM\"}");
+            for (Session session : sessions) {
                 session.close();
                 log.debug("session closed");
             }

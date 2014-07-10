@@ -2,6 +2,7 @@ package cn.maxinyue.plugins.jmeter.websocket;
 
 import cn.maxinyue.plugins.jmeter.websocket.sampler.WebSocketSampler;
 import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jorphan.logging.LoggingManager;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,21 +14,21 @@ import java.util.regex.Pattern;
 @ClientEndpoint
 public class DefaultClientEndpoint {
 
-    static Logger logger = LoggerFactory.getLogger(DefaultClientEndpoint.class);
+    private static final org.apache.log.Logger logger = LoggingManager.getLoggerForClass();
 
-    private WebSocketSampler webSocketSampler;
-
-    private CountDownLatch countDownLatch;
+    private final WebSocketSampler webSocketSampler;
 
     public DefaultClientEndpoint(WebSocketSampler webSocketSampler) {
         this.webSocketSampler = webSocketSampler;
-        countDownLatch=new CountDownLatch(1);
     }
 
     @OnMessage
-    public void onMessage(String s) {
-        webSocketSampler.setResponseMessage(s);
-        countDownLatch.countDown();
+    public void onMessage(String s, Session session) {
+        synchronized (webSocketSampler) {
+            webSocketSampler.setResponseMessage(s);
+            webSocketSampler.notify();
+        }
+
     }
 
     @OnOpen
@@ -40,7 +41,4 @@ public class DefaultClientEndpoint {
         //session.getAsyncRemote().sendText("{\"sender\":{\"staffDict\":{\"empId\":\"1227\"},\"applications\":{\"appId\":\"140304112743\"}},\"content\":\"LOGOUT\",\"messageType\":\"SYSTEM\"}");
     }
 
-    public CountDownLatch getCountDownLatch() {
-        return countDownLatch;
-    }
 }
