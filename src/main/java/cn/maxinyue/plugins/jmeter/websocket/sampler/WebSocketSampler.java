@@ -66,7 +66,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     public static final String RECV_TIMEOUT = "WebSocketSampler.recvTimeout";
     private static final ConcurrentHashSet<Session> sessions
             = new ConcurrentHashSet<>();
-    private DefaultClientEndpoint defaultClientEndpoint;
+    private CountDownLatch countDownLatch;
 
     public WebSocketSampler() {
         setArguments(new Arguments());
@@ -78,9 +78,8 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
         try {
             uri = getUri();
             final WebSocketSampler sampler = this;
-            if (defaultClientEndpoint == null) {
-                defaultClientEndpoint = new DefaultClientEndpoint(sampler);
-            }
+            countDownLatch=new CountDownLatch(1);
+            DefaultClientEndpoint defaultClientEndpoint = new DefaultClientEndpoint(sampler);
             session = client.asyncConnectToServer(defaultClientEndpoint, uri).get();
             log.debug("session:"+session.getId());
             sessions.add(session);
@@ -111,7 +110,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
 //            synchronized (this) {
 //                wait(getRecvTimeout());
 //            }
-            new CountDownLatch(1).await(getRecvTimeout(), TimeUnit.MILLISECONDS);
+            countDownLatch.await(getRecvTimeout(), TimeUnit.MILLISECONDS);
             if (responseMessage == null) {
                 res.setResponseCode("204");
                 responseMessage = "No content (probably timeout).";
@@ -196,6 +195,13 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
         setProperty(new IntegerProperty(PORT, value));
     }
 
+    public CountDownLatch getCountDownLatch() {
+        return countDownLatch;
+    }
+
+    public void setCountDownLatch(CountDownLatch countDownLatch) {
+        this.countDownLatch = countDownLatch;
+    }
 
     public static int getDefaultPort(String protocol, int port) {
         if (port == URL_UNSPECIFIED_PORT) {

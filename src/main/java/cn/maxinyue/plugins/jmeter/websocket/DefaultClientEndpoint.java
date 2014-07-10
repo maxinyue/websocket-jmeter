@@ -26,6 +26,7 @@ public class DefaultClientEndpoint {
     public void onMessage(String s, Session session) {
         synchronized (webSocketSampler) {
             webSocketSampler.setResponseMessage(s);
+            webSocketSampler.getCountDownLatch().countDown();
             webSocketSampler.notify();
         }
 
