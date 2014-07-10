@@ -73,7 +73,7 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
     }
 
     public Session initialize() {
-        URI uri = null;
+        URI uri;
         Session session = null;
         try {
             uri = getUri();
@@ -108,10 +108,10 @@ public class WebSocketSampler extends AbstractSampler implements TestStateListen
                 log.error("session is null!");
                 res.setResponseMessage("session is null!");
             }
-            synchronized (this) {
-                wait(getRecvTimeout());
-            }
-//            new CountDownLatch(1).await(getRecvTimeout(), TimeUnit.MILLISECONDS);
+//            synchronized (this) {
+//                wait(getRecvTimeout());
+//            }
+            new CountDownLatch(1).await(getRecvTimeout(), TimeUnit.MILLISECONDS);
             if (responseMessage == null) {
                 res.setResponseCode("204");
                 responseMessage = "No content (probably timeout).";

@@ -27,7 +27,6 @@ import java.util.Locale;
  */
 public class TestForHerenMessage {
 
-
     public static void main(String[] args) throws Exception {
 
         JMeterEngine engine;
@@ -71,7 +70,7 @@ public class TestForHerenMessage {
         sampler.setPort(9999);
         sampler.setPath("heren-message/message", "UTF-8");
         sampler.setSendMessage("{\"sender\":{\"staffDict\":{\"empId\":\"1419\"},\"applications\":{\"appId\":\"131012160730\"}},\"content\":\"患者住院流程?initParam=221717\",\"messageType\":\"BUSINESS\"}");
-        sampler.setRecvTimeout(20000L);
+        sampler.setRecvTimeout(1000L);
         Summariser summariser = new Summariser();
         HashTree tpConfig = config.add(testPlan);
         HashTree tgConfig = tpConfig.add(threadGroup);
